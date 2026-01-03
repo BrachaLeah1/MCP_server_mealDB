@@ -110,16 +110,16 @@ Test your server before connecting to agent:
 npx @modelcontextprotocol/inspector python src/server.py
 ```
 
-This opens a web interface at `http://localhost:5173` where you can test all 22 tools interactively.
+This opens a web interface at `http://localhost:5173` where you can test all 22 tools interactively.<br>
 (On first usage it installs all dependencies)
 
 ## Configuration 
 
-This server is compatible with any MCP client. Add it to your client's configuration file:
+**This server is compatible with any MCP client.<br> Add it to your client's configuration file**
 
 **Example for Claude Desktop:**
-Add to your claude_desktop_config file:
-in the mcpServers section:
+Add to your claude_desktop_config file:<br>
+in the mcpServers section:<br>
 
 
 
@@ -127,12 +127,14 @@ in the mcpServers section:
 ```json
 {
   "mcpServers": {
+
     "mcp_mealDB": {
       "command": "python",
       "args": [
         "C:\\absolute\\path\\to\\MCP servers\\recipes\\src\\server.py"
       ]
     }
+
   }
 }
 ```
