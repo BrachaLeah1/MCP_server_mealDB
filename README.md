@@ -1,7 +1,5 @@
 # 🍳 MealDB Recipe MCP Server
 
-[![MCP](https://img.shields.io/badge/MCP-Compatible-blue)](https://modelcontextprotocol.io)
-[![Python](https://img.shields.io/badge/Python-3.8+-green)](https://www.python.org)
 
 A Model Context Protocol (MCP) server that provides any AI agent with access to TheMealDB recipe database and local recipe management capabilities. Search thousands of recipes, save them as PDFs, and generate organized shopping lists—all directly from your conversations with your agent!!!
 
