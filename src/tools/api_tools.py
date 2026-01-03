@@ -22,7 +22,10 @@ def format_full_meal(meal: dict) -> str:
     
     ingredients_text = "\n".join(ingredients) if ingredients else "No ingredients listed"
     
-    return f"""# {meal.get('strMeal', 'Unknown')}
+    image_url = meal.get('strMealThumb', '')
+    image_section = f"\n🖼️ [View Recipe Image]({image_url})" if image_url else ""
+    
+    return f"""# {meal.get('strMeal', 'Unknown')}{image_section}
 
 **ID:** {meal.get('idMeal', 'N/A')}
 **Category:** {meal.get('strCategory', 'N/A')}
@@ -35,7 +38,6 @@ def format_full_meal(meal: dict) -> str:
 ## Instructions:
 {meal.get('strInstructions', 'No instructions available')}
 
-**Image:** {meal.get('strMealThumb', 'No image')}
 {f"**Video:** {meal.get('strYoutube')}" if meal.get('strYoutube') else ""}
 """
 
@@ -46,9 +48,10 @@ def format_meal_summary(meal: dict) -> str:
     meal_id = meal.get('idMeal', 'N/A')
     image_url = meal.get('strMealThumb', '')
     
-    summary = f"- **{meal_name}** (ID: {meal_id})"
     if image_url:
-        summary += f"\n  🖼️ [View Image]({image_url})"
+        summary = f"- **[{meal_name}]({image_url})** (ID: {meal_id})"
+    else:
+        summary = f"- **{meal_name}** (ID: {meal_id})"
     
     return summary
 
@@ -59,9 +62,11 @@ def format_category(cat: dict) -> str:
     if len(desc) > 200:
         desc = desc[:200] + "..."
     
-    return f"""## {cat.get('strCategory', 'Unknown')}
+    thumb_url = cat.get('strCategoryThumb', '')
+    thumb_section = f"\n🖼️ [View Category Image]({thumb_url})" if thumb_url else ""
+    
+    return f"""## {cat.get('strCategory', 'Unknown')}{thumb_section}
 {desc}
-**Thumbnail:** {cat.get('strCategoryThumb', 'No image')}
 """
 
 
@@ -192,7 +197,7 @@ def get_api_tool_definitions() -> list[Tool]:
 async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
     """Handle all API tool calls."""
     
-    async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             # Tool 1: Search meal by name
             if name == "search_meal_by_name":
@@ -209,18 +214,21 @@ async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
                 result += "\n---\n\n".join([format_full_meal(meal) for meal in meals])
                 
                 # Add proactive suggestions
-                result += f"\n\n💡 **What would you like to do?**\n"
-                result += "- Save this recipe as a PDF?\n"
-                result += "- Create a shopping list?"
-                if len(meals) > 1:
-                    result += "\n- Save multiple recipes as PDFs?\n"
-                    result += "- Create a shopping list from multiple recipes?"
+                result += f"\n\n **What would you like to do?**\n"
+                result += "- See any specific recipe?\n"
+                result += "- See all categories or areas?\n"
+                result += "- Search recipes by ingredient or specific letter (a-z)?"
                 
                 return [TextContent(type="text", text=result)]
             
             # Tool 2: List meals by first letter
             elif name == "list_meals_by_first_letter":
                 letter = arguments.get("letter", "a").upper()
+                
+                # Validate letter input
+                if not letter.isalpha() or len(letter) != 1:
+                    return [TextContent(type="text", text=f"Invalid input. Please provide a single letter (A-Z).")]
+                
                 response = await client.get(f"{API_BASE}/search.php", params={"f": letter})
                 response.raise_for_status()
                 data = response.json()
@@ -231,13 +239,21 @@ async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
                 
                 result = f"Found {len(meals)} meal(s) starting with '{letter}':\n\n"
                 result += "\n".join([format_meal_summary(meal) for meal in meals])
-                result += f"\n\n💡 **Want to see details for any recipe? Or create a shopping list for multiple recipes?**"
+                result += f"\n\n **What would you like to do?**\n"
+                result += "- See any specific recipe?\n"
+                result += "- See all categories or areas?\n"
+                result += "- Search by ingredient or name?"
                 
                 return [TextContent(type="text", text=result)]
             
             # Tool 3: Lookup meal by ID
             elif name == "lookup_meal_by_id":
                 meal_id = arguments.get("meal_id", "")
+                
+                # Validate meal_id format
+                if not meal_id.isdigit():
+                    return [TextContent(type="text", text=f"Invalid meal ID. Please provide a numeric ID.")]
+                
                 response = await client.get(f"{API_BASE}/lookup.php", params={"i": meal_id})
                 response.raise_for_status()
                 data = response.json()
@@ -247,9 +263,10 @@ async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
                     return [TextContent(type="text", text=f"No meal found with ID '{meal_id}'")]
                 
                 result = format_full_meal(meals[0])
-                result += "\n\n💡 **What would you like to do?**\n"
+                result += "\n\n **What would you like to do?**\n"
                 result += "- Save this recipe as a PDF?\n"
-                result += "- Create a shopping list?"
+                result += "- Create a shopping list?\n"
+                result += "- See another recipe?"
                 
                 return [TextContent(type="text", text=result)]
             
@@ -261,9 +278,12 @@ async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
                 
                 meal = data.get("meals", [{}])[0]
                 result = "Here's a random meal:\n\n" + format_full_meal(meal)
-                result += "\n\n💡 **What would you like to do?**\n"
+                result += "\n\n **What would you like to do?**\n"
                 result += "- Save this recipe as a PDF?\n"
-                result += "- Create a shopping list?"
+                result += "- Create a shopping list?\n"
+                result += "- See another random meal?\n"
+                result += "- See all categories or areas?\n"
+                result += "- Search by ingredient or specific letter (a-z)?"
                 
                 return [TextContent(type="text", text=result)]
             
@@ -276,6 +296,9 @@ async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
                 categories = data.get("categories", [])
                 result = f"Found {len(categories)} categories:\n\n"
                 result += "\n".join([format_category(cat) for cat in categories])
+                result += "\n\n **What would you like to do?**\n"
+                result += "- See recipes in any specific category?"
+                
                 return [TextContent(type="text", text=result)]
             
             # Tool 6: List category names
@@ -288,6 +311,7 @@ async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
                 names = [cat.get("strCategory", "") for cat in categories]
                 result = f"Available categories ({len(names)}):\n\n"
                 result += ", ".join(names)
+                
                 return [TextContent(type="text", text=result)]
             
             # Tool 7: List area names
@@ -300,6 +324,7 @@ async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
                 names = [area.get("strArea", "") for area in areas]
                 result = f"Available cuisines/areas ({len(names)}):\n\n"
                 result += ", ".join(sorted(names))
+                
                 return [TextContent(type="text", text=result)]
             
             # Tool 8: List all ingredients
@@ -321,7 +346,7 @@ async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
                         result += f"- **{name}**\n"
                 
                 if len(ingredients) > 100:
-                    result += f"\n... and {len(ingredients) - 100} more ingredients"
+                    result += f"\n... and {len(ingredients) - 100} more ingredients (showing first 100)"
                 
                 return [TextContent(type="text", text=result)]
             
@@ -337,19 +362,11 @@ async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
                     return [TextContent(type="text", text=f"No meals found with ingredient '{ingredient}'")]
                 
                 result = f"Found {len(meals)} meal(s) with '{ingredient}':\n\n"
-                for meal in meals:
-                    meal_name = meal.get('strMeal', 'Unknown')
-                    meal_id = meal.get('idMeal', 'N/A')
-                    image_url = meal.get('strMealThumb', '')
-                    
-                    result += f"- **{meal_name}** (ID: {meal_id})\n"
-                    if image_url:
-                        result += f"  🖼️ [View Image]({image_url})\n"
-                    result += "\n"
+                result += "\n".join([format_meal_summary(meal) for meal in meals])
                 
-                result += "\n💡 **Next steps:**\n"
-                result += "- Use 'lookup_meal_by_id' to see full recipe details\n"
-                result += "- Want to create a shopping list for multiple recipes? Just let me know which ones!"
+                result += "\n\n **What would you like to do?**\n"
+                result += "- See any specific recipe?\n"
+                result += "- Try another filter?"
                 
                 return [TextContent(type="text", text=result)]
             
@@ -365,19 +382,11 @@ async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
                     return [TextContent(type="text", text=f"No meals found in category '{category}'")]
                 
                 result = f"Found {len(meals)} meal(s) in category '{category}':\n\n"
-                for meal in meals:
-                    meal_name = meal.get('strMeal', 'Unknown')
-                    meal_id = meal.get('idMeal', 'N/A')
-                    image_url = meal.get('strMealThumb', '')
-                    
-                    result += f"- **{meal_name}** (ID: {meal_id})\n"
-                    if image_url:
-                        result += f"  🖼️ [View Image]({image_url})\n"
-                    result += "\n"
+                result += "\n".join([format_meal_summary(meal) for meal in meals])
                 
-                result += "\n💡 **Next steps:**\n"
-                result += "- Use 'lookup_meal_by_id' to see full recipe details\n"
-                result += "- Want to create a shopping list for multiple recipes? Just let me know which ones!"
+                result += "\n\n **What would you like to do?**\n"
+                result += "- See any specific recipe?\n"
+                result += "- Try another filter?"
                 
                 return [TextContent(type="text", text=result)]
             
@@ -393,19 +402,11 @@ async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
                     return [TextContent(type="text", text=f"No meals found from area '{area}'")]
                 
                 result = f"Found {len(meals)} meal(s) from '{area}' cuisine:\n\n"
-                for meal in meals:
-                    meal_name = meal.get('strMeal', 'Unknown')
-                    meal_id = meal.get('idMeal', 'N/A')
-                    image_url = meal.get('strMealThumb', '')
-                    
-                    result += f"- **{meal_name}** (ID: {meal_id})\n"
-                    if image_url:
-                        result += f"  🖼️ [View Image]({image_url})\n"
-                    result += "\n"
+                result += "\n".join([format_meal_summary(meal) for meal in meals])
                 
-                result += "\n💡 **Next steps:**\n"
-                result += "- Use 'lookup_meal_by_id' to see full recipe details\n"
-                result += "- Want to create a shopping list for multiple recipes? Just let me know which ones!"
+                result += "\n\n **What would you like to do?**\n"
+                result += "- See any specific recipe?\n"
+                result += "- Try another filter?"
                 
                 return [TextContent(type="text", text=result)]
             

@@ -63,6 +63,7 @@ class TestFormatters(unittest.TestCase):
         self.assertIn("Mix ingredients and cook.", result)
         self.assertIn("https://example.com/image.jpg", result)
         self.assertIn("https://youtube.com/watch?v=test", result)
+        self.assertIn("View Recipe Image", result)
     
     def test_format_full_meal_no_ingredients(self):
         """Test formatting a meal with no ingredients."""
@@ -70,6 +71,7 @@ class TestFormatters(unittest.TestCase):
             "strMeal": "Test Meal",
             "idMeal": "123",
             "strInstructions": "Test instructions",
+            "strMealThumb": "",
         }
         
         result = format_full_meal(meal)
@@ -85,6 +87,15 @@ class TestFormatters(unittest.TestCase):
         self.assertIn("Teriyaki Chicken", result)
         self.assertNotIn("Video:", result)
     
+    def test_format_full_meal_no_image(self):
+        """Test formatting a meal without image."""
+        meal = self.sample_meal.copy()
+        meal["strMealThumb"] = ""
+        
+        result = format_full_meal(meal)
+        self.assertIn("Teriyaki Chicken", result)
+        self.assertNotIn("View Recipe Image", result)
+    
     def test_format_meal_summary(self):
         """Test formatting a meal summary."""
         result = format_meal_summary(self.sample_meal)
@@ -92,6 +103,19 @@ class TestFormatters(unittest.TestCase):
         self.assertIn("Teriyaki Chicken", result)
         self.assertIn("52772", result)
         self.assertIn("**", result)  # Check for bold formatting
+        self.assertIn("https://example.com/image.jpg", result)
+        self.assertIn("[", result)  # Check for markdown link
+        self.assertIn("]", result)
+    
+    def test_format_meal_summary_no_image(self):
+        """Test formatting a meal summary without image."""
+        meal = self.sample_meal.copy()
+        meal["strMealThumb"] = ""
+        
+        result = format_meal_summary(meal)
+        self.assertIn("Teriyaki Chicken", result)
+        self.assertIn("52772", result)
+        self.assertNotIn("[", result)  # No markdown link
     
     def test_format_category(self):
         """Test formatting a category."""
@@ -100,6 +124,7 @@ class TestFormatters(unittest.TestCase):
         self.assertIn("Seafood", result)
         self.assertIn("Fish, shellfish", result)
         self.assertIn("https://example.com/seafood.jpg", result)
+        self.assertIn("View Category Image", result)
     
     def test_format_category_long_description(self):
         """Test category with long description gets truncated."""
@@ -113,6 +138,15 @@ class TestFormatters(unittest.TestCase):
         result = format_category(category)
         self.assertIn("...", result)
         self.assertLess(len(result), len(long_desc) + 100)
+    
+    def test_format_category_no_image(self):
+        """Test formatting a category without image."""
+        category = self.sample_category.copy()
+        category["strCategoryThumb"] = ""
+        
+        result = format_category(category)
+        self.assertIn("Seafood", result)
+        self.assertNotIn("View Category Image", result)
 
 
 class TestToolDefinitions(unittest.TestCase):
@@ -192,6 +226,7 @@ class TestAPIToolHandlers(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result), 1)
         self.assertIn("Teriyaki Chicken", result[0].text)
         self.assertIn("52772", result[0].text)
+        self.assertIn("What would you like to do?", result[0].text)
         mock_get.assert_called_once()
     
     @patch('src.tools.api_tools.httpx.AsyncClient')
@@ -224,6 +259,24 @@ class TestAPIToolHandlers(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result), 1)
         self.assertIn("Teriyaki Chicken", result[0].text)
         self.assertIn("Found 1 meal(s)", result[0].text)
+        self.assertIn("What would you like to do?", result[0].text)
+    
+    @patch('src.tools.api_tools.httpx.AsyncClient')
+    async def test_list_meals_by_first_letter_invalid(self, mock_client):
+        """Test listing meals with invalid letter input."""
+        result = await handle_api_tool("list_meals_by_first_letter", {"letter": "123"})
+        
+        self.assertEqual(len(result), 1)
+        self.assertIn("Invalid input", result[0].text)
+        self.assertIn("single letter (A-Z)", result[0].text)
+    
+    @patch('src.tools.api_tools.httpx.AsyncClient')
+    async def test_list_meals_by_first_letter_multiple_chars(self, mock_client):
+        """Test listing meals with multiple character input."""
+        result = await handle_api_tool("list_meals_by_first_letter", {"letter": "abc"})
+        
+        self.assertEqual(len(result), 1)
+        self.assertIn("Invalid input", result[0].text)
     
     @patch('src.tools.api_tools.httpx.AsyncClient')
     async def test_lookup_meal_by_id(self, mock_client):
@@ -240,6 +293,16 @@ class TestAPIToolHandlers(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result), 1)
         self.assertIn("Teriyaki Chicken", result[0].text)
         self.assertIn("52772", result[0].text)
+        self.assertIn("What would you like to do?", result[0].text)
+    
+    @patch('src.tools.api_tools.httpx.AsyncClient')
+    async def test_lookup_meal_by_id_invalid_format(self, mock_client):
+        """Test looking up meal with invalid ID format."""
+        result = await handle_api_tool("lookup_meal_by_id", {"meal_id": "abc"})
+        
+        self.assertEqual(len(result), 1)
+        self.assertIn("Invalid meal ID", result[0].text)
+        self.assertIn("numeric ID", result[0].text)
     
     @patch('src.tools.api_tools.httpx.AsyncClient')
     async def test_lookup_meal_by_id_not_found(self, mock_client):
@@ -271,6 +334,7 @@ class TestAPIToolHandlers(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result), 1)
         self.assertIn("random meal", result[0].text)
         self.assertIn("Teriyaki Chicken", result[0].text)
+        self.assertIn("What would you like to do?", result[0].text)
     
     @patch('src.tools.api_tools.httpx.AsyncClient')
     async def test_list_all_categories(self, mock_client):
@@ -287,6 +351,8 @@ class TestAPIToolHandlers(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result), 1)
         self.assertIn("Seafood", result[0].text)
         self.assertIn("Found 1 categories", result[0].text)
+        self.assertIn("What would you like to do?", result[0].text)
+        self.assertIn("See recipes in any specific category?", result[0].text)
     
     @patch('src.tools.api_tools.httpx.AsyncClient')
     async def test_list_category_names(self, mock_client):
@@ -377,6 +443,7 @@ class TestAPIToolHandlers(unittest.IsolatedAsyncioTestCase):
         
         self.assertEqual(len(result), 1)
         self.assertIn("and 50 more ingredients", result[0].text)
+        self.assertIn("showing first 100", result[0].text)
     
     @patch('src.tools.api_tools.httpx.AsyncClient')
     async def test_filter_by_ingredient(self, mock_client):
@@ -399,7 +466,8 @@ class TestAPIToolHandlers(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Found 2 meal(s)", result[0].text)
         self.assertIn("Chicken Soup", result[0].text)
         self.assertIn("Chicken Curry", result[0].text)
-        self.assertIn("lookup_meal_by_id", result[0].text)
+        self.assertIn("What would you like to do?", result[0].text)
+        self.assertIn("See any specific recipe?", result[0].text)
     
     @patch('src.tools.api_tools.httpx.AsyncClient')
     async def test_filter_by_category(self, mock_client):
@@ -420,6 +488,7 @@ class TestAPIToolHandlers(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result), 1)
         self.assertIn("Seafood", result[0].text)
         self.assertIn("Salmon Fillet", result[0].text)
+        self.assertIn("What would you like to do?", result[0].text)
     
     @patch('src.tools.api_tools.httpx.AsyncClient')
     async def test_filter_by_area(self, mock_client):
@@ -440,6 +509,7 @@ class TestAPIToolHandlers(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result), 1)
         self.assertIn("Italian", result[0].text)
         self.assertIn("Spaghetti Carbonara", result[0].text)
+        self.assertIn("What would you like to do?", result[0].text)
     
     @patch('src.tools.api_tools.httpx.AsyncClient')
     async def test_filter_no_results(self, mock_client):
@@ -508,6 +578,27 @@ class TestEdgeCases(unittest.IsolatedAsyncioTestCase):
         
         self.assertEqual(len(result), 1)
         self.assertIn("No meals found", result[0].text)
+    
+    @patch('src.tools.api_tools.httpx.AsyncClient')
+    async def test_meal_with_special_characters(self, mock_client):
+        """Test handling meal names with special characters."""
+        special_meal = {
+            "idMeal": "123",
+            "strMeal": "Test/Meal\\Special",
+            "strMealThumb": "image.jpg",
+        }
+        
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"meals": [special_meal]}
+        mock_response.raise_for_status = MagicMock()
+        
+        mock_get = AsyncMock(return_value=mock_response)
+        mock_client.return_value.__aenter__.return_value.get = mock_get
+        
+        result = await handle_api_tool("search_meal_by_name", {"name": "test"})
+        
+        self.assertEqual(len(result), 1)
+        # Should handle special characters gracefully
 
 
 def run_tests():

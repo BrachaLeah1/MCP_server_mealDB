@@ -222,19 +222,19 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
             try:
                 create_recipe_pdf(meal, filepath)
                 
-                response_text = f"✅ Recipe saved successfully"
+                response_text = f"Recipe saved successfully"
                 if file_exists:
                     response_text += " (replaced existing file)"
-                response_text += f"!\n\n📄 File: {filepath}\n🍳 Recipe: {meal.get('strMeal', 'Unknown')}\n📁 Category: {category}"
+                response_text += f"!\n\nFile: {filepath}\nRecipe: {meal.get('strMeal', 'Unknown')}\nCategory: {category}"
                 
                 return [TextContent(type="text", text=response_text)]
             except Exception as e:
                 return [TextContent(
                     type="text",
-                    text=f"❌ Failed to create PDF: {str(e)}"
+                    text=f"Failed to create PDF: {str(e)}"
                 )]
         
-        # Tool 2: Save recipe by name (NEW!)
+        # Tool 2: Save recipe by name
         elif name == "save_recipe_by_name":
             import httpx
             
@@ -255,7 +255,7 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
                 if not meals:
                     return [TextContent(
                         type="text",
-                        text=f"❌ No recipe found with name '{recipe_name}'. Try a different search term."
+                        text=f"No recipe found with name '{recipe_name}'. Try a different search term."
                     )]
                 
                 # If multiple results, use the first one (most relevant)
@@ -265,7 +265,7 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
                 # Now save using the meal_id
                 result_msg = ""
                 if len(meals) > 1:
-                    result_msg = f"ℹ️ Found {len(meals)} recipes. Saving the first match: {meal.get('strMeal')}\n\n"
+                    result_msg = f"Found {len(meals)} recipes. Saving the first match: {meal.get('strMeal')}\n\n"
                 
                 # Determine save directory
                 if custom_directory:
@@ -295,44 +295,44 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
                 try:
                     create_recipe_pdf(meal, filepath)
                     
-                    result_msg += f"✅ Recipe saved successfully"
+                    result_msg += f"Recipe saved successfully"
                     if file_exists:
                         result_msg += " (replaced existing file)"
-                    result_msg += f"!\n\n📄 File: {filepath}\n🍳 Recipe: {meal.get('strMeal', 'Unknown')}\n📁 Category: {category}"
+                    result_msg += f"!\n\nFile: {filepath}\nRecipe: {meal.get('strMeal', 'Unknown')}\nCategory: {category}"
                     
                     return [TextContent(type="text", text=result_msg)]
                 except Exception as e:
                     return [TextContent(
                         type="text",
-                        text=f"❌ Failed to create PDF: {str(e)}"
+                        text=f"Failed to create PDF: {str(e)}"
                     )]
         
         # Tool 3: List saved recipes
         elif name == "list_saved_recipes":
-            result = "📚 Saved recipes by category:\n\n"
+            result = "Saved recipes by category:\n\n"
             total_files = 0
             
             # Get all category directories
             if not config.RECIPES_DIR.exists():
-                return [TextContent(type="text", text=f"📭 No recipes directory found.\n\n📁 Directory: {config.RECIPES_DIR}")]
+                return [TextContent(type="text", text=f"No recipes directory found.\n\nDirectory: {config.RECIPES_DIR}")]
             
             for category_dir in sorted(config.RECIPES_DIR.iterdir()):
                 if category_dir.is_dir() and not category_dir.name.startswith('.'):
                     files = sorted(category_dir.glob("*.pdf"))
                     if files:
-                        result += f"📁 {category_dir.name} ({len(files)})\n"
+                        result += f"{category_dir.name} ({len(files)})\n"
                         for i, filepath in enumerate(files, 1):
                             size = filepath.stat().st_size / 1024  # Convert to KB
                             modified = datetime.fromtimestamp(filepath.stat().st_mtime)
                             result += f"   {i}. {filepath.stem}\n"
-                            result += f"      💾 {size:.1f} KB | 📅 {modified.strftime('%Y-%m-%d %H:%M')}\n"
+                            result += f"      Size: {size:.1f} KB | Modified: {modified.strftime('%Y-%m-%d %H:%M')}\n"
                         result += "\n"
                         total_files += len(files)
             
             if total_files == 0:
-                return [TextContent(type="text", text=f"📭 No saved recipes found.\n\n📁 Directory: {config.RECIPES_DIR}")]
+                return [TextContent(type="text", text=f"No saved recipes found.\n\nDirectory: {config.RECIPES_DIR}")]
             
-            result += f"📊 Total recipes: {total_files}\n📁 Directory: {config.RECIPES_DIR}"
+            result += f"Total recipes: {total_files}\nDirectory: {config.RECIPES_DIR}"
             return [TextContent(type="text", text=result)]
         
         # Tool 4: Delete saved recipe
@@ -358,14 +358,14 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
             if not found:
                 return [TextContent(
                     type="text",
-                    text=f"❌ Recipe not found: {filename}\n\n💡 Use 'list_saved_recipes' to see available recipes."
+                    text=f"Recipe not found: {filename}\n\nTip: Use 'list_saved_recipes' to see available recipes."
                 )]
             
             filepath.unlink()
             
             return [TextContent(
                 type="text",
-                text=f"🗑️ Recipe deleted successfully!\n\n📄 Deleted: {filename}"
+                text=f"Recipe deleted successfully!\n\nDeleted: {filename}"
             )]
         
         # Tool 5: List shopping lists
@@ -375,20 +375,20 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
             if not shopping_lists:
                 return [TextContent(
                     type="text",
-                    text=f"📭 No shopping lists found.\n\n📁 Directory: {config.RECIPES_DIR}"
+                    text=f"No shopping lists found.\n\nDirectory: {config.RECIPES_DIR}"
                 )]
             
-            result = f"🛒 Found {len(shopping_lists)} shopping list(s):\n\n"
+            result = f"Found {len(shopping_lists)} shopping list(s):\n\n"
             for i, filepath in enumerate(shopping_lists, 1):
                 size = filepath.stat().st_size / 1024
                 modified = datetime.fromtimestamp(filepath.stat().st_mtime)
                 result += f"{i}. {filepath.name}\n"
-                result += f"   💾 {size:.1f} KB | 📅 {modified.strftime('%Y-%m-%d at %H:%M')}\n\n"
+                result += f"   Size: {size:.1f} KB | Modified: {modified.strftime('%Y-%m-%d at %H:%M')}\n\n"
             
-            result += f"📁 Directory: {config.RECIPES_DIR}"
+            result += f"Directory: {config.RECIPES_DIR}"
             return [TextContent(type="text", text=result)]
         
-        # Tool 6: Delete shopping list (NEW!)
+        # Tool 6: Delete shopping list
         elif name == "delete_shopping_list":
             filename = arguments.get("filename", "")
             
@@ -401,24 +401,24 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
             if not filepath.exists():
                 return [TextContent(
                     type="text",
-                    text=f"❌ Shopping list not found: {filename}\n\n💡 Use 'list_shopping_lists' to see available lists."
+                    text=f"Shopping list not found: {filename}\n\nTip: Use 'list_shopping_lists' to see available lists."
                 )]
             
             filepath.unlink()
             
             return [TextContent(
                 type="text",
-                text=f"🗑️ Shopping list deleted successfully!\n\n📄 Deleted: {filename}"
+                text=f"Shopping list deleted successfully!\n\nDeleted: {filename}"
             )]
         
-        # Tool 7: Delete all shopping lists (NEW!)
+        # Tool 7: Delete all shopping lists
         elif name == "delete_all_shopping_lists":
             shopping_lists = list(config.RECIPES_DIR.glob("shopping_list_*.pdf"))
             
             if not shopping_lists:
                 return [TextContent(
                     type="text",
-                    text=f"📭 No shopping lists found to delete.\n\n📁 Directory: {config.RECIPES_DIR}"
+                    text=f"No shopping lists found to delete.\n\nDirectory: {config.RECIPES_DIR}"
                 )]
             
             count = len(shopping_lists)
@@ -427,7 +427,7 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
             
             return [TextContent(
                 type="text",
-                text=f"🗑️ Successfully deleted {count} shopping list(s)!"
+                text=f"Successfully deleted {count} shopping list(s)!"
             )]
         
         # Tool 8: Create shopping list
@@ -438,7 +438,7 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
             custom_directory = arguments.get("directory")
             
             if not meal_ids:
-                return [TextContent(type="text", text="❌ No meal IDs provided")]
+                return [TextContent(type="text", text="No meal IDs provided")]
             
             # Determine save directory
             if custom_directory:
@@ -498,28 +498,28 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
                 create_shopping_list_pdf(meal_names, all_ingredients, filepath)
                 
                 # Build response
-                summary = f"✅ Shopping list created successfully!\n\n"
-                summary += f"📄 File: {filepath}\n"
-                summary += f"🛒 Recipes ({len(meal_names)}):\n"
+                summary = f"Shopping list created successfully!\n\n"
+                summary += f"File: {filepath}\n"
+                summary += f"Recipes ({len(meal_names)}):\n"
                 for i, name in enumerate(meal_names, 1):
                     summary += f"   {i}. {name}\n"
-                summary += f"\n📊 Total ingredients: {len(all_ingredients)}\n"
+                summary += f"\nTotal ingredients: {len(all_ingredients)}\n"
                 
                 if deleted_count > 0:
-                    summary += f"🗑️ Deleted {deleted_count} old shopping list(s) to keep max 3\n"
+                    summary += f"Deleted {deleted_count} old shopping list(s) to keep max 3\n"
                 
                 # Check current count
                 current_lists = list(save_dir.glob("shopping_list_*.pdf"))
-                summary += f"📋 Total shopping lists: {len(current_lists)}"
+                summary += f"Total shopping lists: {len(current_lists)}"
                 
                 return [TextContent(type="text", text=summary)]
             except Exception as e:
                 return [TextContent(
                     type="text",
-                    text=f"❌ Failed to create shopping list PDF: {str(e)}"
+                    text=f"Failed to create shopping list PDF: {str(e)}"
                 )]
         
-        # Tool 9: Create shopping list from saved recipes (NEW!)
+        # Tool 9: Create shopping list from saved recipes
         elif name == "create_shopping_list_from_saved":
             replace_existing = arguments.get("replace_existing", False)
             custom_filename = arguments.get("filename")
@@ -532,7 +532,7 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
             # For now, let's return an error message guiding the user
             return [TextContent(
                 type="text",
-                text="❌ This feature requires recipe metadata storage which isn't implemented yet.\n\n💡 As a workaround:\n1. List your saved recipes with 'list_saved_recipes'\n2. Look up each recipe by name to get its ID\n3. Use 'create_shopping_list' with those IDs\n\nOr, I can help you create a shopping list if you tell me which saved recipes you want to include!"
+                text="This feature requires recipe metadata storage which isn't implemented yet.\n\nWorkaround:\n1. List your saved recipes with 'list_saved_recipes'\n2. Look up each recipe by name to get its ID\n3. Use 'create_shopping_list' with those IDs\n\nOr, I can help you create a shopping list if you tell me which saved recipes you want to include!"
             )]
         
         # Tool 10: Set recipes directory
@@ -540,7 +540,7 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
             directory = arguments.get("directory", "")
             
             if not directory:
-                return [TextContent(type="text", text="❌ Directory path is required")]
+                return [TextContent(type="text", text="Directory path is required")]
             
             try:
                 new_dir = config.save_recipes_dir(directory)
@@ -549,20 +549,20 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
                 
                 return [TextContent(
                     type="text",
-                    text=f"✅ Recipes directory updated!\n\n📁 New location: {new_dir}"
+                    text=f"Recipes directory updated!\n\nNew location: {new_dir}"
                 )]
             except Exception as e:
-                return [TextContent(type="text", text=f"❌ Failed to set directory: {str(e)}")]
+                return [TextContent(type="text", text=f"Failed to set directory: {str(e)}")]
         
         # Tool 11: Get recipes directory
         elif name == "get_recipes_directory":
             return [TextContent(
                 type="text",
-                text=f"📁 Current recipes directory:\n{config.RECIPES_DIR}"
+                text=f"Current recipes directory:\n{config.RECIPES_DIR}"
             )]
         
         else:
             return None  # Not a local tool
     
     except Exception as e:
-        return [TextContent(type="text", text=f"❌ Error: {str(e)}")]
+        return [TextContent(type="text", text=f"Error: {str(e)}")]

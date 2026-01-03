@@ -1,149 +1,174 @@
-# MealDB MCP Server
+# 🍳 MealDB Recipe MCP Server
 
-A well-organized MCP server for TheMealDB recipe API with clean separation of concerns.
+[![MCP](https://img.shields.io/badge/MCP-Compatible-blue)](https://modelcontextprotocol.io)
+[![Python](https://img.shields.io/badge/Python-3.8+-green)](https://www.python.org)
+
+A Model Context Protocol (MCP) server that provides any AI agent with access to TheMealDB recipe database and local recipe management capabilities. Search thousands of recipes, save them as PDFs, and generate organized shopping lists—all directly from your conversations with your agent.
+
+## Features
+
+### 🔍 Recipe Discovery
+- Search recipes by name, ingredient, category, or cuisine
+- Browse recipes alphabetically (A-Z)
+- Get random recipe suggestions
+- View complete recipe details with ingredients and instructions
+
+### 📁 Recipe Management
+- Save recipes as professional PDF files
+- Automatic organization by category (Seafood, Dessert, etc.)
+- List and manage saved recipes
+- Delete unwanted recipes
+
+### 🛒 Shopping List Generation
+- Create shopping lists from multiple recipes
+- Automatic ingredient categorization (Produce, Meat, Dairy, etc.)
+- Combine duplicate ingredients intelligently
+- Export as printer-friendly PDFs
+
+### 🌐 Recipe Database
+- Access to 1000+ recipes from TheMealDB
+- Multiple cuisines (Italian, Chinese, Mexican, and more)
+- Diverse categories (Vegetarian, Seafood, Desserts, etc.)
+- Recipe images and video links included
 
 ## Project Structure
-
 ```
-recipes/
-├── README.md
-├── requirements.txt
+recipe-mcp-server/
 ├── src/
-│   ├── server.py              # Main entry point - routes and coordinates
+│   ├── server.py                      # Main MCP server entry point
 │   └── tools/
-│       ├── api_tools.py       # API tools - fetches data from TheMealDB
-│       ├── local_tools.py     # Local tools - saves recipes, creates shopping lists
-│       └── __pycache__/
+│       ├── api_tools.py               # TheMealDB API integration tools
+│       └── local/
+│           ├── __init__.py            # Local tools package exports
+│           ├── tools.py               # Local file management tools
+│           ├── api.py                 # API client for fetching meal data
+│           ├── config.py              # Configuration and directory management
+│           ├── categories.py          # Ingredient categorization for shopping lists
+│           ├── pdf_recipe.py          # Recipe PDF generator
+│           └── pdf_shopping.py        # Shopping list PDF generator
 ├── tests/
-└── docs/
+│   ├── test_api_tools.py              # Tests for API tools
+│   └── test_local_tools.py            # Tests for local tools
+├── requirements.txt                   # Python dependencies
+└── README.md                          # This file
 ```
 
-## Tools Available
+## Prerequisites
 
-### API Tools (11 tools) - from `src/tools/api_tools.py`
-Fetch data from TheMealDB:
+- **Python 3.8 or higher** (tested on Python 3.13)
+- **Any MCP-compatible client** (Claude Desktop, etc.)
+- Internet connection (for accessing TheMealDB API)
 
-1. **search_meal_by_name** - Search recipes by name
-2. **list_meals_by_first_letter** - Browse alphabetically
-3. **lookup_meal_by_id** - Get full recipe details
-4. **get_random_meal** - Random recipe inspiration
-5. **list_all_categories** - All categories with details
-6. **list_category_names** - Just category names
-7. **list_area_names** - All cuisines
-8. **list_all_ingredients** - All ingredients
-9. **filter_by_ingredient** - Find by ingredient
-10. **filter_by_category** - Find by category
-11. **filter_by_area** - Find by cuisine
+### Key Dependencies
+- `mcp` - Model Context Protocol SDK
+- `httpx` - Async HTTP client for API requests
+- `reportlab` - PDF generation
+- `Pillow` - Image processing
+- `requests` - HTTP requests for images
 
-### Local Tools (5 tools) - from `src/tools/local_tools.py`
-Manage recipes on your computer:
-
-1. **save_recipe_to_file** - Save recipe as text file
-2. **list_saved_recipes** - View all saved recipes
-3. **delete_saved_recipe** - Remove a saved recipe
-4. **create_shopping_list** - Generate shopping list from recipe IDs
-5. **email_recipe** - Create email draft with recipe
+All dependencies are listed in `requirements.txt` and will be installed automatically.
 
 ## Installation
 
+### 1. Clone the Repository
 ```bash
-# Install dependencies
-pip install mcp httpx
+git clone https://github.com/YOUR_USERNAME/recipe-mcp-server.git
+cd recipe-mcp-server
+```
 
-# Run the server (from project root)
+### 2. Create Virtual Environment (Recommended)
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Verify Installation
+
+Run the tests to verify everything is working:
+```bash
+python -m pytest tests/ -v
+```
+
+Or test the server directly:
+```bash
 python src/server.py
 ```
 
-## Configuration
+## Configuration 
 
-Add to your Claude Desktop config (`claude_desktop_config.json`):
+## Usage
 
-```json
-{
-  "mcpServers": {
-    "mealdb": {
-      "command": "python",
-      "args": ["/full/path/to/recipes/src/server.py"]
-    }
-  }
-}
+Once configured with your MCP client, you can interact with the recipe server through natural language.
+
+### Quick Start Examples
+
+#### Discover Recipes
+```
+"Show me a random recipe"
+"Search for chicken recipes"
+"Find Italian recipes"
+"Show me desserts"
+"List recipes starting with 'P'"
 ```
 
-## Local Storage
+#### View Recipe Details
+```
+"Show me the recipe for Pad Thai"
+"What ingredients do I need for Carbonara?"
+"How do I make Chicken Teriyaki?"
+```
 
-Recipes are saved to: `~/mealdb_recipes/`
+#### Save Recipes
+```
+"Save this recipe as a PDF"
+"Save the Pad Thai recipe"
+"Download this recipe to my computer"
+```
 
-This directory is created automatically on first use.
+#### Manage Saved Recipes
+```
+"List my saved recipes"
+"Show me all my saved recipes"
+"Delete the Chicken Soup recipe"
+```
 
-## Usage Examples
+#### Create Shopping Lists
+```
+"Create a shopping list from these recipes"
+"Make a shopping list for recipes 52772, 52773, 52774"
+"Generate a shopping list from my saved recipes"
+```
 
-**Finding and saving a recipe:**
-1. "Search for pasta recipes" → Uses `search_meal_by_name`
-2. "Save recipe ID 52772" → Uses `save_recipe_to_file`
+#### Browse Categories & Cuisines
+```
+"What recipe categories are available?"
+"Show me all cuisines"
+"What Italian recipes do you have?"
+"Show me all Seafood recipes"
+```
 
-**Creating a shopping list:**
-1. "Find Italian recipes" → Uses `filter_by_area`
-2. "Create shopping list for IDs 52772, 52773" → Uses `create_shopping_list`
+### Server Startup
 
-**Managing saved recipes:**
-- "List my saved recipes" → Uses `list_saved_recipes`
-- "Delete Arrabiata.txt" → Uses `delete_saved_recipe`
+If running the server manually (for testing or development):
+```bash
+python src/server.py
+```
 
-## Architecture
+The server will start in stdio mode and communicate via standard input/output with your MCP client.
 
-### Why This Structure?
+## Acknowledgments
 
-**src/server.py** - Main coordinator
-- Registers all tools from both modules
-- Routes tool calls to appropriate handlers
-- Single entry point for the MCP server
-
-**src/tools/api_tools.py** - External API interactions
-- All TheMealDB API calls
-- Data fetching and formatting
-- No local file operations
-
-**src/tools/local_tools.py** - Local file operations
-- Save/delete recipes to local files
-- Create shopping lists
-- Email draft generation
-- No external API calls
-
-### Benefits:
-- Separation of concerns - Each file has one job
-- Easy to maintain - Changes to API don't affect local tools
-- Easy to extend - Add new tools to the right file
-- Easy to test - Test API and local tools separately
-- Clear organization - Know where everything is
-
-## Extending the Server
-
-**Adding a new API tool:**
-1. Add tool definition to `get_api_tool_definitions()` in `src/tools/api_tools.py`
-2. Add handler logic to `handle_api_tool()` in `src/tools/api_tools.py`
-
-**Adding a new local tool:**
-1. Add tool definition to `get_local_tool_definitions()` in `src/tools/local_tools.py`
-2. Add handler logic to `handle_local_tool()` in `src/tools/local_tools.py`
-
-No changes needed to `src/server.py` - it automatically picks up new tools!
-
-## Troubleshooting
-
-**SSL Certificate Error:**
-- Already handled with `verify=False` in httpx clients
-
-**Import Errors:**
-- Ensure all files are in the correct subdirectories (`src/server.py` and `src/tools/*.py`)
-- Run the server from the project root: `python src/server.py`
-
-**UnicodeEncodeError (Windows):**
-- Remove emoji characters from print statements
-- Use ASCII characters instead for console output
-
-**Permission Errors:**
-- Check that `~/mealdb_recipes/` directory is writable
-
-## License
-
-MIT License - Free to use and modify!
+- **[TheMealDB](https://www.themealdb.com/)** - Free recipe API providing access to thousands of recipes with images and detailed instructions
+- **[Model Context Protocol (MCP)](https://modelcontextprotocol.io)** - Framework for connecting AI assistants to external tools and data sources
+- **[Anthropic](https://www.anthropic.com/)** - For creating Claude and the MCP specification
+- **ReportLab** - PDF generation library for creating professional recipe and shopping list documents
