@@ -118,13 +118,19 @@ This opens a web interface at `http://localhost:5173` where you can test all 22 
 This server is compatible with any MCP client. Add it to your client's configuration file:
 
 **Example for Claude Desktop:**
+Add to your claude_desktop_config file:
+in the mcpServers section:
+
+
+
+
 ```json
 {
   "mcpServers": {
-    "recipes": {
+    "mcp_mealDB": {
       "command": "python",
       "args": [
-        "C:/absolute/path/to/MCP_server_mealDB/src/server.py"
+        "C:\\absolute\\path\\to\\MCP servers\\recipes\\src\\server.py"
       ]
     }
   }
@@ -136,7 +142,7 @@ This server is compatible with any MCP client. Add it to your client's configura
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Linux:** `~/.config/Claude/claude_desktop_config.json`
 
-**Important:** Use absolute paths and restart your MCP client after configuration changes.
+**Important:** Use absolute paths and **restart** your MCP client after configuration changes.
 
 
 ## Usage
