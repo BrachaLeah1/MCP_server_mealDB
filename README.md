@@ -3,7 +3,7 @@
 [![MCP](https://img.shields.io/badge/MCP-Compatible-blue)](https://modelcontextprotocol.io)
 [![Python](https://img.shields.io/badge/Python-3.8+-green)](https://www.python.org)
 
-A Model Context Protocol (MCP) server that provides any AI agent with access to TheMealDB recipe database and local recipe management capabilities. Search thousands of recipes, save them as PDFs, and generate organized shopping lists—all directly from your conversations with your agent.
+A Model Context Protocol (MCP) server that provides any AI agent with access to TheMealDB recipe database and local recipe management capabilities. Search thousands of recipes, save them as PDFs, and generate organized shopping lists—all directly from your conversations with your agent!!!
 
 ## Features
 
@@ -57,7 +57,7 @@ recipe-mcp-server/
 
 - **Python 3.8 or higher** (tested on Python 3.13)
 - **Any MCP-compatible client** (Claude Desktop, etc.)
-- Internet connection (for accessing TheMealDB API)
+- **Internet connection** (for accessing TheMealDB API)
 
 ### Key Dependencies
 - `mcp` - Model Context Protocol SDK
@@ -72,8 +72,8 @@ All dependencies are listed in `requirements.txt` and will be installed automati
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/recipe-mcp-server.git
-cd recipe-mcp-server
+git clone https://github.com/BrachaLeah1/MCP_server_mealDB.git
+cd MCP_server_mealDB
 ```
 
 ### 2. Create Virtual Environment (Recommended)
@@ -96,7 +96,7 @@ pip install -r requirements.txt
 
 Run the tests to verify everything is working:
 ```bash
-python -m pytest tests/ -v
+pytest tests/ -v
 ```
 
 Or test the server directly:
