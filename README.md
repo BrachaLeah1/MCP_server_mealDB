@@ -50,6 +50,7 @@ recipe-mcp-server/
 │   ├── test_api_tools.py              # Tests for API tools
 │   └── test_local_tools.py            # Tests for local tools
 ├── requirements.txt                   # Python dependencies
+├── .gitignore                         # Git ignore file
 └── README.md                          # This file
 ```
 
@@ -104,7 +105,41 @@ Or test the server directly:
 python src/server.py
 ```
 
+## Testing with MCP Inspector
+
+Test your server before connecting to agent:
+```bash
+npx @modelcontextprotocol/inspector python src/server.py
+```
+
+This opens a web interface at `http://localhost:5173` where you can test all 22 tools interactively.
+(On first usage it installs all dependencies)
+
 ## Configuration 
+
+This server is compatible with any MCP client. Add it to your client's configuration file:
+
+**Example for Claude Desktop:**
+```json
+{
+  "mcpServers": {
+    "recipes": {
+      "command": "python",
+      "args": [
+        "C:/absolute/path/to/MCP_server_mealDB/src/server.py"
+      ]
+    }
+  }
+}
+```
+
+**claude_desktop_config file locations:**
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Linux:** `~/.config/Claude/claude_desktop_config.json`
+
+**Important:** Use absolute paths and restart your MCP client after configuration changes.
+
 
 ## Usage
 

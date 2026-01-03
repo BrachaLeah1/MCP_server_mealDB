@@ -197,7 +197,7 @@ def get_api_tool_definitions() -> list[Tool]:
 async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
     """Handle all API tool calls."""
     
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
         try:
             # Tool 1: Search meal by name
             if name == "search_meal_by_name":
