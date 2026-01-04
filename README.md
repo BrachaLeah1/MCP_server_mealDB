@@ -131,11 +131,11 @@ Add it to your client’s MCP configuration file and restart the client.
 {
   "mcpServers": {
     "recipes": {
-      "command": "C:\\Users\\win\\Documents\\projects-2025\\MCP servers\\recipes_mcp\\venv\\Scripts\\python.exe",
+      "command": "C:/absolute/path/to/MCP_server_mealDB/venv/Scripts/python.exe",
       "args": [
-        "C:\\Users\\win\\Documents\\projects-2025\\MCP servers\\recipes_mcp\\src\\server.py"
+        "C:/absolute/path/to/MCP_server_mealDB/src/server.py"
       ],
-      "cwd": "C:\\Users\\win\\Documents\\projects-2025\\MCP servers\\recipes_mcp",
+      "cwd": "C:/absolute/path/to/MCP_server_mealDB",
       "env": {
         "PYTHONUNBUFFERED": "1"
       }
