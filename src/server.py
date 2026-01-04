@@ -36,10 +36,6 @@ async def list_tools():
     
     all_tools = api_tools + local_tools
     
-    print(f"Registered {len(all_tools)} tools:")
-    print(f"   - API tools: {len(api_tools)}")
-    print(f"   - Local tools: {len(local_tools)}")
-    
     return all_tools
 
 
@@ -64,10 +60,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 async def main():
     """Run the MCP server."""
     from mcp.server.stdio import stdio_server
-    
-    print("Starting MealDB MCP Server...")
-    print("=" * 50)
-    
+        
     async with stdio_server() as (read_stream, write_stream):
         await app.run(
             read_stream,
