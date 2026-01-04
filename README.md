@@ -113,38 +113,69 @@ npx @modelcontextprotocol/inspector python src/server.py
 This opens a web interface at `http://localhost:5173` where you can test all 22 tools interactively.<br>
 (On first usage it installs all dependencies)
 
-## Configuration 
+## ⚙️ MCP Client Configuration
 
-**This server is compatible with any MCP client.<br> Add it to your client's configuration file**
+This server is compatible with any **MCP-compatible client**.  
+Add it to your client’s MCP configuration file and restart the client.
 
-**Example for Claude Desktop:**
-Add to your claude_desktop_config file:<br>
-in the mcpServers section:<br>
+---
 
+### Example: Cursor IDE
 
-
+1. Press `Ctrl + Shift + P`
+2. Open **Cursor Settings**
+3. Navigate to **Tools & MCP**
+4. Add a new MCP server with the following configuration:
 
 ```json
 {
   "mcpServers": {
-
-    "mcp_mealDB": {
-      "command": "python",
+    "recipes": {
+      "command": "C:\\Users\\win\\Documents\\projects-2025\\MCP servers\\recipes_mcp\\venv\\Scripts\\python.exe",
       "args": [
-        "C:\\absolute\\path\\to\\MCP servers\\recipes\\src\\server.py"
-      ]
+        "C:\\Users\\win\\Documents\\projects-2025\\MCP servers\\recipes_mcp\\src\\server.py"
+      ],
+      "cwd": "C:\\Users\\win\\Documents\\projects-2025\\MCP servers\\recipes_mcp",
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
     }
-
   }
 }
 ```
 
-**claude_desktop_config file locations:**
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+---
+
+### Example: Claude Desktop
+
+```json
+{
+  "mcpServers": {
+    "recipes": {
+      "command": "python",
+      "args": [
+        "C:/absolute/path/to/MCP_server_mealDB/src/server.py"
+      ]
+    }
+  }
+}
+```
+
+---
+
+### Claude Desktop configuration file locations
+
+- **Windows:** `%APPDATA%\\Claude\\claude_desktop_config.json`
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Linux:** `~/.config/Claude/claude_desktop_config.json`
 
-**Important:** Use absolute paths and **restart** your MCP client after configuration changes.
+---
+
+### Notes
+
+- Always use **absolute paths**
+- Restart your MCP client after making changes
+- Ensure the configured Python executable matches the virtual environment used by the server
 
 
 ## Usage
