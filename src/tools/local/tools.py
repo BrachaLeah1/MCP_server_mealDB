@@ -220,7 +220,7 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
             
             # Create PDF
             try:
-                create_recipe_pdf(meal, filepath)
+                await create_recipe_pdf(meal, filepath)
                 
                 response_text = f"Recipe saved successfully"
                 if file_exists:
@@ -228,10 +228,20 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
                 response_text += f"!\n\nFile: {filepath}\nRecipe: {meal.get('strMeal', 'Unknown')}\nCategory: {category}"
                 
                 return [TextContent(type="text", text=response_text)]
+            except (IOError, OSError) as e:
+                return [TextContent(
+                    type="text",
+                    text=f"File system error while creating PDF: {str(e)}. Check that you have write permissions."
+                )]
+            except ValueError as e:
+                return [TextContent(
+                    type="text",
+                    text=f"Invalid data format for recipe: {str(e)}"
+                )]
             except Exception as e:
                 return [TextContent(
                     type="text",
-                    text=f"Failed to create PDF: {str(e)}"
+                    text=f"Unexpected error creating PDF: {str(e)}"
                 )]
         
         # Tool 2: Save recipe by name
@@ -293,7 +303,7 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
                 
                 # Create PDF
                 try:
-                    create_recipe_pdf(meal, filepath)
+                    await create_recipe_pdf(meal, filepath)
                     
                     result_msg += f"Recipe saved successfully"
                     if file_exists:
@@ -301,10 +311,20 @@ async def handle_local_tool(name: str, arguments: Any) -> list[TextContent]:
                     result_msg += f"!\n\nFile: {filepath}\nRecipe: {meal.get('strMeal', 'Unknown')}\nCategory: {category}"
                     
                     return [TextContent(type="text", text=result_msg)]
+                except (IOError, OSError) as e:
+                    return [TextContent(
+                        type="text",
+                        text=f"File system error while creating PDF: {str(e)}. Check that you have write permissions."
+                    )]
+                except ValueError as e:
+                    return [TextContent(
+                        type="text",
+                        text=f"Invalid data format for recipe: {str(e)}"
+                    )]
                 except Exception as e:
                     return [TextContent(
                         type="text",
-                        text=f"Failed to create PDF: {str(e)}"
+                        text=f"Unexpected error creating PDF: {str(e)}"
                     )]
         
         # Tool 3: List saved recipes

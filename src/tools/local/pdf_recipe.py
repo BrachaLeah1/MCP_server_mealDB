@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from io import BytesIO
 
-import requests
+import httpx
 from PIL import Image as PILImage
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -18,7 +18,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Tabl
 from reportlab.lib import colors
 
 
-def create_recipe_pdf(meal: dict, filepath: Path) -> None:
+async def create_recipe_pdf(meal: dict, filepath: Path) -> None:
     """
     Create a professional, printable PDF recipe with image.
     
@@ -93,13 +93,15 @@ def create_recipe_pdf(meal: dict, filepath: Path) -> None:
     story.append(info_table)
     story.append(Spacer(1, 0.3*inch))
     
-    # Try to add recipe image
+    # Try to add recipe image using async httpx
     image_url = meal.get('strMealThumb')
     temp_img_path = None
     if image_url:
         try:
-            response = requests.get(image_url, timeout=10)
-            if response.status_code == 200:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(image_url)
+                response.raise_for_status()
+                
                 img_data = BytesIO(response.content)
                 img = PILImage.open(img_data)
                 
@@ -120,8 +122,22 @@ def create_recipe_pdf(meal: dict, filepath: Path) -> None:
                 pdf_img = Image(temp_img_path, width=max_width, height=new_height)
                 story.append(pdf_img)
                 story.append(Spacer(1, 0.2*inch))
+                
+        except httpx.TimeoutException:
+            # Image download timed out, continue without image
+            pass
+        except httpx.HTTPStatusError as e:
+            # HTTP error (404, 500, etc.), continue without image
+            pass
+        except httpx.RequestError as e:
+            # Network error, continue without image
+            pass
+        except (IOError, OSError) as e:
+            # Image processing or file system error
+            pass
         except Exception as e:
-            pass  # If image fails, just skip it
+            # Any other unexpected error, continue without image
+            pass
     
     # Ingredients section
     story.append(Paragraph("INGREDIENTS", heading_style))

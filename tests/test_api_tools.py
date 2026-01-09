@@ -542,7 +542,7 @@ class TestAPIToolHandlers(unittest.IsolatedAsyncioTestCase):
         result = await handle_api_tool("search_meal_by_name", {"name": "chicken"})
         
         self.assertEqual(len(result), 1)
-        self.assertIn("API Error", result[0].text)
+        self.assertIn("Unexpected error", result[0].text)
         self.assertIn("Network error", result[0].text)
 
 

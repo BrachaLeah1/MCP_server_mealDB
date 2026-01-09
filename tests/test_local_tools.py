@@ -152,15 +152,17 @@ class TestPDFGeneration(unittest.TestCase):
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
     
-    def test_create_recipe_pdf(self):
+    async def test_create_recipe_pdf(self):
         """Test creating a recipe PDF."""
         filepath = Path(self.temp_dir) / "test_recipe.pdf"
         
-        # Mock the image request to avoid network calls
-        with patch('src.tools.local.pdf_recipe.requests.get') as mock_get:
-            mock_get.return_value.status_code = 404  # Simulate no image
+        # Mock the httpx AsyncClient to avoid network calls
+        with patch('src.tools.local.pdf_recipe.httpx.AsyncClient') as mock_client:
+            # Make the async context manager return a mock that raises an error
+            # This simulates no image being downloaded
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(side_effect=Exception("No image"))
             
-            create_recipe_pdf(self.test_meal, filepath)
+            await create_recipe_pdf(self.test_meal, filepath)
         
         # Check that PDF was created
         self.assertTrue(filepath.exists())
@@ -224,11 +226,11 @@ class TestLocalToolHandlers(unittest.IsolatedAsyncioTestCase):
             shutil.rmtree(self.temp_dir)
     
     @patch('src.tools.local.tools.fetch_meal_data')
-    @patch('src.tools.local.pdf_recipe.requests.get')
-    async def test_save_recipe_to_file(self, mock_requests, mock_fetch):
+    @patch('src.tools.local.pdf_recipe.httpx.AsyncClient')
+    async def test_save_recipe_to_file(self, mock_client, mock_fetch):
         """Test saving a recipe to file."""
         mock_fetch.return_value = self.mock_meal
-        mock_requests.return_value.status_code = 404  # No image
+        mock_client.return_value.__aenter__.return_value.get = AsyncMock(side_effect=Exception('No image'))  # No image
         
         # Temporarily override the RECIPES_DIR in the config module
         original_dir = config.RECIPES_DIR

@@ -413,5 +413,39 @@ async def handle_api_tool(name: str, arguments: Any) -> list[TextContent]:
             else:
                 return None  # Not an API tool
         
+        except httpx.TimeoutException:
+            return [TextContent(
+                type="text",
+                text="Request timed out while connecting to TheMealDB. Please check your internet connection and try again."
+            )]
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                return [TextContent(
+                    type="text",
+                    text="Resource not found on TheMealDB API. The recipe or data you requested may not exist."
+                )]
+            elif e.response.status_code >= 500:
+                return [TextContent(
+                    type="text",
+                    text=f"TheMealDB server error ({e.response.status_code}). The service may be temporarily unavailable. Please try again later."
+                )]
+            else:
+                return [TextContent(
+                    type="text",
+                    text=f"HTTP error ({e.response.status_code}) from TheMealDB: {str(e)}"
+                )]
+        except httpx.RequestError as e:
+            return [TextContent(
+                type="text",
+                text=f"Network error while connecting to TheMealDB: {str(e)}. Please check your internet connection."
+            )]
+        except (KeyError, ValueError, TypeError) as e:
+            return [TextContent(
+                type="text",
+                text=f"Error processing API response from TheMealDB. The data format may have changed: {str(e)}"
+            )]
         except Exception as e:
-            return [TextContent(type="text", text=f"API Error: {str(e)}")]
+            return [TextContent(
+                type="text",
+                text=f"Unexpected error: {str(e)}"
+            )]
